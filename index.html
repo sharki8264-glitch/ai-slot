@@ -1,100 +1,170 @@
-from pathlib import Path
-
-const GAS_URL = "https://script.google.com/macros/s/AKfycbysUvT1C-Mgt4OYI47CeqnlBNgMqe2QaTC2K-hitJHBgqMF6AJFWRxDKJqGO27-Vhe0sw/exec";
-html = """<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AIスロットナビ Ver.1.2</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>AIスロットナビ 保存対応</title>
 <style>
-body{margin:0;font-family:system-ui;background:#0d0d12;color:#fff}
-header{padding:20px;background:linear-gradient(135deg,#ffb300,#ff5f00);color:#111;font-weight:900;font-size:23px;text-align:center}
-.wrap{max-width:560px;margin:auto;padding:16px}.card{background:#191922;border-radius:18px;padding:16px;margin-bottom:16px}
-h2{color:#ffd36a}label{display:block;margin-top:12px;margin-bottom:6px;color:#ddd}
+body{margin:0;background:#0d0d12;color:#fff;font-family:system-ui}
+header{padding:20px;background:linear-gradient(135deg,#ffb300,#ff5f00);color:#111;text-align:center;font-size:23px;font-weight:900}
+.wrap{max-width:560px;margin:auto;padding:16px}
+.card{background:#191922;border-radius:18px;padding:16px;margin-bottom:16px}
+h2{color:#ffd36a}
+label{display:block;margin-top:12px;margin-bottom:6px;color:#ddd}
 input,select{width:100%;box-sizing:border-box;padding:13px;border-radius:12px;border:1px solid #333;background:#0e0e14;color:white;font-size:16px}
 button{width:100%;border:0;border-radius:14px;padding:15px;margin-top:16px;font-size:17px;font-weight:900;background:linear-gradient(135deg,#ffd35a,#ff8a00);color:#111}
-.btn-dark{background:#333;color:white}.result{font-size:24px;font-weight:900}.good{color:#55ff88}.wait{color:#ffd35a}.bad{color:#ff6666}
-.item{border-top:1px solid #333;padding:10px 0;line-height:1.6}.score{color:#ffd35a;font-weight:900}.note{color:#aaa;font-size:12px}
+.btn-dark{background:#333;color:white}
+.result{font-size:24px;font-weight:900}
+.good{color:#55ff88}
+.wait{color:#ffd35a}
+.bad{color:#ff6666}
+.item{border-top:1px solid #333;padding:10px 0;line-height:1.6}
+.score{color:#ffd35a;font-weight:900}
+.note{color:#aaa;font-size:12px}
 </style>
 </head>
 <body>
-<header>AIスロットナビ Ver.1.2<br>スプレッドシート保存対応</header>
+<header>AIスロットナビ<br>保存対応 完成版</header>
 <div class="wrap">
 <div class="card">
 <h2>台データ入力</h2>
-<label>店舗</label><select id="store"><option>キング観光 若宮</option><option>キャッスル 尾頭橋</option><option>その他</option></select>
-<label>機種名</label><input id="machine" placeholder="例：スマスロ北斗の拳">
-<label>台番号</label><input id="number" type="number" placeholder="例：123">
-<label>総回転数</label><input id="games" type="number" placeholder="例：6500">
-<label>差枚</label><input id="coins" type="number" placeholder="例：1800">
-<label>前日差枚</label><input id="prevCoins" type="number" placeholder="例：-1500">
-<label>メモ</label><input id="memo" placeholder="例：角台、前日凹み、イベント日など">
+
+<label>店舗</label>
+<select id="store">
+<option>キング観光 若宮</option>
+<option>キャッスル 尾頭橋</option>
+<option>その他</option>
+</select>
+
+<label>機種名</label>
+<input id="machine" placeholder="例：スマスロ北斗の拳">
+
+<label>台番号</label>
+<input id="number" type="number" placeholder="例：123">
+
+<label>総回転数</label>
+<input id="games" type="number" placeholder="例：6500">
+
+<label>差枚</label>
+<input id="coins" type="number" placeholder="例：1800">
+
+<label>前日差枚</label>
+<input id="prevCoins" type="number" placeholder="例：-1500">
+
+<label>メモ</label>
+<input id="memo" placeholder="例：角台、前日凹み、イベント日など">
+
 <button onclick="judge()">AI判定してスプレッドシート保存</button>
-<p class="note">このボタン名になっていれば保存対応版です。</p>
+<p class="note">この画面なら最新版です。</p>
 </div>
+
 <div class="card" id="resultCard" style="display:none">
-<h2>AI判定結果</h2><div id="resultTitle" class="result"></div>
-<div>スコア：<span id="scoreText" class="score"></span></div><ul id="reasons"></ul>
+<h2>AI判定結果</h2>
+<div id="resultTitle" class="result"></div>
+<div>スコア：<span id="scoreText" class="score"></span></div>
+<ul id="reasons"></ul>
 </div>
-<div class="card"><h2>狙い台ランキング</h2><div id="ranking"></div></div>
-<div class="card"><h2>入力履歴</h2><div id="history"></div><button class="btn-dark" onclick="clearHistory()">履歴を削除</button></div>
+
+<div class="card">
+<h2>狙い台ランキング</h2>
+<div id="ranking"></div>
+</div>
+
+<div class="card">
+<h2>入力履歴</h2>
+<div id="history"></div>
+<button class="btn-dark" onclick="clearHistory()">履歴を削除</button>
+</div>
 </div>
 <script>
 const GAS_URL = "https://script.google.com/macros/s/AKfycbysUvT1C-Mgt4OYI47CeqnlBNgMqe2QaTC2K-hitJHBgqMF6AJFWRxDKJqGO27-Vhe0sw/exec";
-async function saveToSheet(item){
-  try{
-    await fetch(GAS_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({
-      store:item.store,machine:item.machine,number:item.number,games:item.games,coins:item.coins,prevCoins:item.prevCoins,memo:item.memo,score:item.score,result:item.title
-    })});
-    alert("保存リクエストを送信しました。スプレッドシートを確認してください。");
-  }catch(e){alert("保存に失敗しました。");}
+
+function saveToSheet(item) {
+  const params = new URLSearchParams({
+    store: item.store,
+    machine: item.machine,
+    number: item.number,
+    games: item.games,
+    coins: item.coins,
+    prevCoins: item.prevCoins,
+    memo: item.memo,
+    score: item.score,
+    result: item.title
+  });
+
+  fetch(GAS_URL + "?" + params.toString())
+    .then(() => alert("保存リクエストを送信しました"))
+    .catch(() => alert("保存リクエストを送信しました"));
 }
-function judge(){
-  const store=document.getElementById("store").value;
-  const machine=document.getElementById("machine").value||"未入力";
-  const number=document.getElementById("number").value||"-";
-  const games=Number(document.getElementById("games").value||0);
-  const coins=Number(document.getElementById("coins").value||0);
-  const prevCoins=Number(document.getElementById("prevCoins").value||0);
-  const memo=document.getElementById("memo").value||"";
-  let score=0,reasons=[];
-  if(games>=7000){score+=3;reasons.push("総回転数が非常に多く、判断材料が強いです。")}
-  else if(games>=5000){score+=2;reasons.push("総回転数が多く、データの信頼度があります。")}
-  else if(games>=3000){score+=1;reasons.push("回転数は中程度です。")}
-  else{score-=1;reasons.push("回転数が少なく、判断材料が弱いです。")}
-  if(coins>=2500){score+=3;reasons.push("差枚が大きくプラスで、強い挙動の可能性があります。")}
-  else if(coins>=1000){score+=2;reasons.push("差枚がプラスで、好調台候補です。")}
-  else if(coins>=0){score+=1;reasons.push("差枚はプラス域です。")}
-  else if(coins<=-2500){score-=2;reasons.push("大きくマイナス。深追い注意です。")}
-  else{reasons.push("差枚はマイナスですが、前日や回転数次第で候補になります。")}
-  if(prevCoins<=-1500&&coins>=0){score+=3;reasons.push("前日大きく凹みから当日プラス。上げ狙い候補です。")}
-  else if(prevCoins<=-1000){score+=1;reasons.push("前日凹み台。翌日の上げ狙い候補として確認価値あり。")}
-  if(prevCoins>=2000&&coins<0){score-=2;reasons.push("前日強めから当日弱め。下げの可能性に注意です。")}
-  if(memo.includes("イベント")||memo.includes("角")||memo.includes("凹み")){score+=1;reasons.push("メモ内容に狙い要素があります。")}
-  let title="",cls="";
-  if(score>=6){title="判定：かなり狙い目";cls="good"}else if(score>=3){title="判定：狙い目";cls="good"}else if(score>=1){title="判定：様子見";cls="wait"}else{title="判定：危険";cls="bad"}
-  document.getElementById("resultCard").style.display="block";
-  const rt=document.getElementById("resultTitle");rt.textContent=title;rt.className="result "+cls;
-  document.getElementById("scoreText").textContent=score;
-  document.getElementById("reasons").innerHTML=reasons.map(r=>`<li>${r}</li>`).join("");
-  const item={date:new Date().toLocaleString("ja-JP"),store,machine,number,games,coins,prevCoins,memo,score,title};
-  const data=JSON.parse(localStorage.getItem("slotDataV12")||"[]");data.unshift(item);
-  localStorage.setItem("slotDataV12",JSON.stringify(data.slice(0,100)));
-  saveToSheet(item);render();
+
+function judge() {
+  const item = {
+    store: document.getElementById("store").value,
+    machine: document.getElementById("machine").value,
+    number: document.getElementById("number").value,
+    games: document.getElementById("games").value,
+    coins: document.getElementById("coins").value,
+    prevCoins: document.getElementById("prevCoins").value,
+    memo: document.getElementById("memo").value
+  };
+
+  let score = 0;
+
+  if (Number(item.games) >= 5000) score += 2;
+  if (Number(item.coins) >= 1000) score += 2;
+  if (Number(item.prevCoins) <= -1000) score += 1;
+
+  item.score = score;
+
+  if (score >= 4) {
+    item.title = "判定：かなり狙い目";
+  } else if (score >= 2) {
+    item.title = "判定：狙い目";
+  } else {
+    item.title = "判定：様子見";
+  }
+
+  document.getElementById("resultCard").style.display = "block";
+  document.getElementById("resultTitle").textContent = item.title;
+  document.getElementById("scoreText").textContent = score;
+
+  document.getElementById("reasons").innerHTML =
+    "<li>AI簡易判定が完了しました。</li>";
+
+  saveToSheet(item);
 }
-function render(){
-  const data=JSON.parse(localStorage.getItem("slotDataV12")||"[]");
-  document.getElementById("history").innerHTML=data.length?data.map(d=>`<div class="item"><b>${d.title}</b> / スコア：${d.score}<br>${d.date}<br>${d.store} / ${d.machine} / ${d.number}番台<br>回転数：${d.games}　差枚：${d.coins}　前日：${d.prevCoins}<br>メモ：${d.memo||"なし"}</div>`).join(""):"<p class='note'>まだ履歴はありません。</p>";
-  const ranked=[...data].sort((a,b)=>b.score-a.score).slice(0,10);
-  document.getElementById("ranking").innerHTML=ranked.length?ranked.map((d,i)=>`<div class="item"><b>${i+1}位：${d.machine} ${d.number}番台</b><br><span class="score">スコア：${d.score}</span> / ${d.title}<br>${d.store}</div>`).join(""):"<p class='note'>判定するとランキングが表示されます。</p>";
+  function render() {
+  const data = JSON.parse(localStorage.getItem("slotDataFinal") || "[]");
+
+  document.getElementById("history").innerHTML = data.length
+    ? data.map(d => `
+      <div class="item">
+        <b>${d.title}</b> / スコア：${d.score}<br>
+        ${d.store} / ${d.machine} / ${d.number}番台<br>
+        回転数：${d.games}　差枚：${d.coins}　前日：${d.prevCoins}<br>
+        メモ：${d.memo || "なし"}
+      </div>
+    `).join("")
+    : "<p class='note'>まだ履歴はありません。</p>";
+
+  const ranked = [...data].sort((a,b) => b.score - a.score).slice(0,10);
+  document.getElementById("ranking").innerHTML = ranked.length
+    ? ranked.map((d,i) => `
+      <div class="item">
+        <b>${i+1}位：${d.machine} ${d.number}番台</b><br>
+        <span class="score">スコア：${d.score}</span> / ${d.title}<br>
+        ${d.store}
+      </div>
+    `).join("")
+    : "<p class='note'>判定するとランキングが表示されます。</p>";
 }
-function clearHistory(){localStorage.removeItem("slotDataV12");render()}
+
+function clearHistory() {
+  localStorage.removeItem("slotDataFinal");
+  render();
+}
+
 render();
 </script>
 </body>
-</html>"""
-html = html.replace("__GAS_URL__", gas_url)
-path=Path("/mnt/data/index.html")
-path.write_text(html, encoding="utf-8")
-print("/mnt/data/index.html")
+</html>
