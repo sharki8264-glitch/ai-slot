@@ -41,7 +41,7 @@ button{width:100%;border:0;border-radius:14px;padding:15px;margin-top:16px;font-
 <div class="card"><h2>入力履歴</h2><div id="history"></div><button class="btn-dark" onclick="clearHistory()">履歴を削除</button></div>
 </div>
 <script>
-const GAS_URL = "__GAS_URL__";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbysUvT1C-Mgt4OYI47CeqnlBNgMqe2QaTC2K-hitJHBgqMF6AJFWRxDKJqGO27-Vhe0sw/exec";
 async function saveToSheet(item){
   try{
     await fetch(GAS_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({
