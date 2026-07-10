@@ -22,13 +22,17 @@ button{width:100%;border:0;border-radius:14px;padding:15px;margin-top:16px;font-
 .score{color:#ffd35a;font-weight:900}
 .note{color:#aaa;font-size:12px}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
 <header>AIスロットナビ<br>保存対応 完成版</header>
 <div class="wrap">
 <div class="card">
 <h2>台データ入力</h2>
-
+<label>スクリーンショット読み取り</label>
+<input type="file" id="imageInput" accept="image/*">
+<button onclick="readScreenshot()">📷 画像から文字を読み取る</button>
+<pre id="ocrText" class="note"></pre>
 <label>店舗</label>
 <select id="store">
 <option>キング観光 若宮</option>
@@ -165,6 +169,22 @@ function clearHistory() {
 }
 
 render();
+async function readScreenshot() {
+  const file = document.getElementById("imageInput").files[0];
+  if (!file) {
+    alert("画像を選択してください");
+    return;
+  }
+
+  document.getElementById("ocrText").textContent = "読み取り中...";
+
+  const result = await Tesseract.recognize(file, "jpn+eng");
+
+  const text = result.data.text;
+  document.getElementById("ocrText").textContent = text;
+
+  alert("OCR読み取り完了");
+}
 </script>
 </body>
 </html>
